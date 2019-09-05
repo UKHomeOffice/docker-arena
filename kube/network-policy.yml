@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: {{.ARENA_NAME}}
+spec:
+  podSelector:
+    matchLabels:
+      name: {{.ARENA_NAME}}
+  egress:
+  - {}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-external
+    ports:
+    - port: 10443
+      protocol: TCP

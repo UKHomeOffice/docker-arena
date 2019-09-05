@@ -1,0 +1,52 @@
+pipeline:
+
+  image_to_quay:
+    image: quay.io/ukhomeofficedigital/drone-docker
+    secrets:
+    - source: QUAY_USERNAME
+      target: DOCKER_USERNAME
+    - source: QUAY_PASSWORD
+      target: DOCKER_PASSWORD
+    registry: quay.io
+    repo: quay.io/ukhomeofficedigital/cop-arena
+    tags: ${DRONE_COMMIT_SHA}
+    when:
+      branch: master
+      event: push
+
+  deploy_to_dev:
+    image: quay.io/ukhomeofficedigital/kd
+    secrets:
+      - DEV_NGINX_IMAGE
+      - DEV_NGINX_TAG
+      - DEV_KUBE_SERVER
+      - DEV_KUBE_TOKEN
+      - DEV_ARENA_NAME
+      - DEV_ARENA_PORT
+      - DEV_ARENA_IMAGE
+      - DEV_REDIS_PORT
+      - DEV_REDIS_SSL
+      - DEV_REDIS_URL
+      - DEV_REDIS_TOKEN
+    commands:
+      - export NGINX_IMAGE=$${DEV_NGINX_IMAGE}
+      - export NGINX_TAG=$${DEV_NGINX_TAG}
+      - export KUBE_SERVER=$${DEV_KUBE_SERVER}
+      - export KUBE_TOKEN=$${DEV_KUBE_TOKEN}
+      - export ARENA_NAME=$${DEV_ARENA_NAME}
+      - export ARENA_PORT=$${DEV_ARENA_PORT}
+      - export ARENA_IMAGE=$${DEV_ARENA_IMAGE}
+      - export ARENA_TAG=$${DRONE_COMMIT_SHA}
+      - export REDIS_PORT=$${DEV_REDIS_PORT}
+      - export REDIS_SSL=$${DEV_REDIS_SSL}
+      - export REDIS_URL=$${DEV_REDIS_URL}
+      - export REDIS_TOKEN=$${DEV_REDIS_TOKEN}
+      - kd --insecure-skip-tls-verify -f kube/cert.yml
+      - kd --insecure-skip-tls-verify -f kube/network-policy.yml
+      - kd --insecure-skip-tls-verify -f kube/service.yml
+      - kd --insecure-skip-tls-verify -f kube/secret.yml
+      - kd --insecure-skip-tls-verify -f kube/deployment.yml --timeout=5m
+    when:
+      branch: master
+      event: push
+

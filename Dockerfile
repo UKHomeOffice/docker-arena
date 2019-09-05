@@ -1,29 +1,18 @@
 FROM node:8-alpine
-LABEL version "2.6.3"
-LABEL description "Arena web GUI in an alpine based docker image."
 
-ENV VERSION 2.6.3
-
-RUN mkdir -p /home/arena && \
-    addgroup -S arena && \
-    adduser -S -G arena arena && \
-    apk add --no-cache ca-certificates wget && \
-    cd /tmp && \
-    wget https://github.com/bee-queue/arena/archive/v${VERSION}.tar.gz && \
-    tar xfz v${VERSION}.tar.gz && \
-    mv arena-${VERSION} /opt/arena && \
-    rm -fr /tmp/*.tar.gz
+# - Upgrade alpine packages to avoid possible os vulnerabilities
+# - Tini for Handling Kernel Signals https://github.com/krallin/tini
+#   https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#handling-kernel-signals
+RUN apk --no-cache upgrade && apk add --no-cache tini
 
 WORKDIR /opt/arena
 
-RUN yarn --production && \
-    chown -R arena:arena /opt/arena && \
-    apk del wget ca-certificates && \
-    rm -rf /usr/include /etc/ssl /usr/share/man \
-      /usr/local/share/.cache/yarn /tmp/* /var/cache/apk/*
+COPY package.json package-lock.json /opt/arena/
+RUN npm ci --production && npm cache clean --force
 
-USER arena
+COPY . /opt/arena/
 
-EXPOSE 4567
+USER node
 
-CMD ["yarn", "start"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["npm", "start"]
