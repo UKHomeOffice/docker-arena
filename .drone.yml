@@ -28,6 +28,7 @@ pipeline:
       - DEV_REDIS_SSL
       - DEV_REDIS_URL
       - DEV_REDIS_TOKEN
+      - DEV_ARENA_KUBE_NAMESPACE
     commands:
       - export NGINX_IMAGE=$${DEV_NGINX_IMAGE}
       - export NGINX_TAG=$${DEV_NGINX_TAG}
@@ -41,6 +42,8 @@ pipeline:
       - export REDIS_SSL=$${DEV_REDIS_SSL}
       - export REDIS_URL=$${DEV_REDIS_URL}
       - export REDIS_TOKEN=$${DEV_REDIS_TOKEN}
+      - export ARENA_KUBE_NAMESPACE=$${DEV_ARENA_KUBE_NAMESPACE}
+      - export KUBE_NAMESPACE=$${DEV_ARENA_KUBE_NAMESPACE}
       - kd --insecure-skip-tls-verify -f kube/cert.yml
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
       - kd --insecure-skip-tls-verify -f kube/service.yml
